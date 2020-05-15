@@ -1,0 +1,895 @@
+{% extends "orders/base.html" %}
+{%block title %}Pinochio's Pizza{%endblock%}
+
+{% block nav %}
+{% if request.user.is_authenticated %}
+    <ul class="nav nav-pills mx-auto">
+        <li class="nav-item">
+            <a class="nav-link menulink" href="#pizza">Pizzas</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link menulink" href="#sub">Subs</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link menulink" href="#pasta">Pasta</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link menulink" href="#salad">Salads</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link menulink" href="#dinner">Dinner platters</a>
+        </li>
+    </ul>  
+{%endif %} 
+{%endblock %}
+
+{%block js %}
+<script type="text/javascript">
+    function randtop() {
+        return Math.floor(Math.random() * {{toppings|length}}) + 1;
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        //document.querySelectorAll(".menulink").forEach((liink) => {
+        //    liink.addEventListener('click', () => {
+        //        window.scrollTo(0, 565);
+        //    });
+        //});
+        document.querySelectorAll(".ordselect").forEach((sel) => {
+            sel.addEventListener("change", () => {
+                sel.classList.remove("is-invalid");
+            })
+        })
+        document.querySelectorAll(".pizzatop").forEach((sel) => {
+            sel.addEventListener("change", () => {
+                document.querySelectorAll(".pizzatop").forEach((sel2) => {
+                    sel2.classList.remove("is-invalid");
+                });
+            });
+        });
+        document.getElementById('top1').onchange = () => {
+            document.getElementById('2top1').value = document.getElementById('top1').value
+        }
+        document.getElementById('top2').onchange = () => {
+            document.getElementById('2top2').value = document.getElementById('top2').value
+        }
+        document.getElementById('top3').onchange = () => {
+            document.getElementById('2top3').value = document.getElementById('top3').value
+        }
+        document.getElementById('top4').onchange = () => {
+            document.getElementById('2top4').value = document.getElementById('top4').value
+        }
+        document.getElementById('special').onchange = function() {
+            document.getElementById('top1').disabled = this.checked;
+            document.getElementById('top2').disabled = this.checked;
+            document.getElementById('top3').disabled = this.checked;
+            if (this.checked) {
+                let egy = randtop();
+                let ketto = randtop();
+                while (egy == ketto) {
+                    ketto = randtop();
+                }
+                let harom = randtop();
+                while (egy == harom || ketto == harom) {
+                    harom = randtop();
+                }
+                let negy = randtop();
+                while (egy == negy || ketto == negy || harom == negy) {
+                    negy = randtop();
+                }
+                document.getElementById('top1').value = egy;
+                document.getElementById('top2').value = ketto;
+                document.getElementById('top3').value = harom;
+                document.getElementById('top4').value = negy;
+                document.getElementById('2top1').value = egy;
+                document.getElementById('2top2').value = ketto;
+                document.getElementById('2top3').value = harom;
+                document.getElementById('2top4').value = negy;
+            } else {
+                document.getElementById('top4').value = 0;
+                document.getElementById('2top4').value = 0;
+            }
+        }
+        document.getElementById('subtype').onchange = () => {
+            if (document.getElementById('subtype').value == 10) {
+                document.querySelectorAll('.subext').forEach( (check) => {
+                    check.disabled = false;
+                })    
+            } else {
+                document.querySelectorAll('.subext').forEach( (check) => {
+                    check.disabled = true;
+                    check.checked = false;
+                })
+            } if (document.querySelector("#subtype").value == "15") {
+                document.querySelector("#smallsub").disabled = true;
+            } else {
+                document.querySelector("#smallsub").disabled = false;
+            }
+        }
+        document.querySelector("#buypasta").onsubmit = () => {
+            event.preventDefault();
+            if (document.querySelector("#pastatype").value == 0) {
+                document.querySelector("#pastatype").classList.add("is-invalid");
+            } else {
+                document.querySelector("#pastatype").classList.remove("is-invalid");
+                $.ajax({
+                    url: '/pastaorder',
+                    data: $('#buypasta').serialize(),
+                    type: 'POST',
+                    success: function(response){
+                        if (response.succ) {
+                            $('#pastamodal').modal('toggle')
+                            document.getElementById("cartno").classList.remove("badge-warning")
+                            document.getElementById("cartno").classList.add("badge-danger")
+                            let cartno = parseInt(document.getElementById("cartno").innerHTML);
+                            document.getElementById("cartno").innerHTML = cartno +1;
+                            document.getElementById('pastatype').value = 0;  
+                        } else {
+                            alert(response.error);
+                        }
+                    },
+                    error: function(error){
+                        console.log(error);
+                    }
+                });
+            }    	
+        }
+        document.querySelector("#buysalad").onsubmit = () => {
+            event.preventDefault();
+            if (document.querySelector("#saladtype").value == 0) {
+                document.querySelector("#saladtype").classList.add("is-invalid");
+            } else {
+                document.querySelector("#saladtype").classList.remove("is-invalid");
+                $.ajax({
+                    url: '/saladorder',
+                    data: $('#buysalad').serialize(),
+                    type: 'POST',
+                    success: function(response){
+                        if (response.succ) {
+                            $('#saladmodal').modal('toggle')
+                            document.getElementById("cartno").classList.remove("badge-warning")
+                            document.getElementById("cartno").classList.add("badge-danger")
+                            let cartno = parseInt(document.getElementById("cartno").innerHTML);
+                            document.getElementById("cartno").innerHTML = cartno +1;
+                            document.getElementById('saladtype').value = 0;  
+                        } else {
+                            alert(response.error);
+                        }
+                    },
+                    error: function(error){
+                        console.log(error);
+                    }
+                });
+            }   	
+        }
+        document.querySelector("#buydinner").onsubmit = () => {
+            event.preventDefault();
+            let err = 0;
+            if (document.querySelector("#dinnertype").value == 0) {
+                document.querySelector("#dinnertype").classList.add("is-invalid");
+                err += 1;
+            } else {
+                document.querySelector("#dinnertype").classList.remove("is-invalid");
+            } if (document.querySelector("#dinnersize").value == 0) {
+                document.querySelector("#dinnersize").classList.add("is-invalid");
+                err += 1;
+            } else {
+                document.querySelector("#dinnersize").classList.remove("is-invalid");
+            } if (err == 0){
+                $.ajax({
+                    url: '/dinnerorder',
+                    data: $('#buydinner').serialize(),
+                    type: 'POST',
+                    success: function(response){
+                        if (response.succ) {
+                            $('#dinnermodal').modal('toggle')
+                            document.getElementById("cartno").classList.remove("badge-warning")
+                            document.getElementById("cartno").classList.add("badge-danger")
+                            let cartno = parseInt(document.getElementById("cartno").innerHTML);
+                            document.getElementById("cartno").innerHTML = cartno +1;
+                            document.getElementById('dinnertype').value = 0;  
+                            document.getElementById('dinnersize').value = 0;  
+                        } else {
+                            alert(response.error);
+                        }
+                    },
+                    error: function(error){
+                        console.log(error);
+                    }
+                });	
+            }    
+        }   
+        document.querySelector("#buysub").onsubmit = () => {
+            event.preventDefault();
+            let err = 0;
+            if (document.querySelector("#subtype").value == 0) {
+                document.querySelector("#subtype").classList.add("is-invalid");
+                err += 1;
+            } else {
+                document.querySelector("#subtype").classList.remove("is-invalid");
+            }
+            if (document.querySelector("#subsize").value == 0 || (document.querySelector("#subtype").value == 15 && document.querySelector("#subsize").value == 1)) {
+                document.querySelector("#subsize").classList.add("is-invalid");
+                err += 1;
+            } else {
+                document.querySelector("#subsize").classList.remove("is-invalid");
+            } if (err == 0) {
+                $.ajax({
+                    url: '/suborder',
+                    data: $('#buysub').serialize(),
+                    type: 'POST',
+                    success: function(response){
+                        if (response.succ) {
+                            $('#submodal').modal('toggle')
+                            document.getElementById("cartno").classList.remove("badge-warning")
+                            document.getElementById("cartno").classList.add("badge-danger")
+                            let cartno = parseInt(document.getElementById("cartno").innerHTML);
+                            document.getElementById("cartno").innerHTML = cartno +1;
+                            document.getElementById('subtype').value = 0;
+                            document.getElementById('subsize').value = 0;
+                            document.getElementById('extcheese').checked = false;
+                            document.querySelector("#smallsub").disabled = false;
+                            document.querySelectorAll('.subext').forEach( (check) => {
+                                check.checked = false;
+                                check.disabled = true;
+                            })    
+                        } else {
+                            alert(response.error);
+                        }
+                    },
+                    error: function(error){
+                        console.log(error);
+                    }
+                });	
+            }    
+        } 
+        document.querySelector("#buypizza").onsubmit = () => {
+            event.preventDefault();
+            let err = 0;
+            if (document.querySelector("#pizzatype").value == 0) {
+                document.querySelector("#pizzatype").classList.add("is-invalid");
+                err += 1;
+            } else {
+                document.querySelector("#pizzatype").classList.remove("is-invalid");
+            }
+            if (document.querySelector("#pizzasize").value == 0) {
+                document.querySelector("#pizzasize").classList.add("is-invalid");
+                err += 1;
+            } else {
+                document.querySelector("#pizzasize").classList.remove("is-invalid");
+            } if ((document.querySelector("#top1").value == document.querySelector("#top2").value && document.querySelector("#top1").value != 0) || (document.querySelector("#top1").value == document.querySelector("#top3").value && document.querySelector("#top1").value != 0) || (document.querySelector("#top2").value == document.querySelector("#top3").value && document.querySelector("#top2").value != 0) ) {
+                document.querySelector("#top1").classList.add("is-invalid");
+                document.querySelector("#top2").classList.add("is-invalid");
+                document.querySelector("#top3").classList.add("is-invalid");
+                err += 1;
+            } else {
+                document.querySelector("#top1").classList.remove("is-invalid");
+                document.querySelector("#top2").classList.remove("is-invalid");
+                document.querySelector("#top3").classList.remove("is-invalid");
+            } if (err == 0){
+                $.ajax({
+					url: '/pizzaorder',
+					data: $('#buypizza').serialize(),
+					type: 'POST',
+					success: function(response){
+						//var resp=JSON.parse(response);
+						if (response.succ) {
+                            $('#pizzamodal').modal('toggle')
+                            document.getElementById("cartno").classList.remove("badge-warning")
+                            document.getElementById("cartno").classList.add("badge-danger")
+                            let cartno = parseInt(document.getElementById("cartno").innerHTML);
+                            document.getElementById("cartno").innerHTML = cartno +1;
+                            document.getElementById('top4').value = 0;
+                            document.getElementById('2top4').value = 0;
+                            document.getElementById('top3').value = 0;
+                            document.getElementById('2top3').value = 0;
+                            document.getElementById('top2').value = 0;
+                            document.getElementById('2top2').value = 0;
+                            document.getElementById('top1').value = 0;
+                            document.getElementById('2top1').value = 0;
+                            document.getElementById('pizzatype').value = 0;
+                            document.getElementById('pizzasize').value = 0;
+                            document.getElementById('special').checked = false;
+                            document.getElementById('top1').disabled = false;
+                            document.getElementById('top2').disabled = false;
+                            document.getElementById('top3').disabled = false;
+						} else {
+							alert(response.error);
+						}
+					},
+					error: function(error){
+						console.log(error);
+					}
+				});	
+            }
+        }
+        document.querySelectorAll('.pizzapr').forEach((sel) => {
+            sel.addEventListener('change', () => {
+                $.ajax({
+					url: '/pizzaprice',
+					data: $('#buypizza').serialize(),
+					type: 'POST',
+					success: function(response){
+						if (response.succ) {
+                            document.getElementById("pizzaprice").innerHTML = "$" + response.price;
+                        } else {
+                            document.getElementById("pizzaprice").innerHTML = "Invalid";
+                        } 
+                    },
+					error: function(error){
+						console.log(error);
+					}
+                });
+            }) 
+        });
+        document.querySelectorAll('.subpr').forEach((sel) => {
+            sel.addEventListener('change', () => {
+                $.ajax({
+					url: '/subprice',
+					data: $('#buysub').serialize(),
+					type: 'POST',
+					success: function(response){
+						if (response.succ) {
+                            document.getElementById("subprice").innerHTML = "$" + response.price;
+                        } else {
+                            document.getElementById("subprice").innerHTML = "Invalid";
+                        } 
+                    },
+					error: function(error){
+						console.log(error);
+					}
+                });
+            }) 
+        });
+        document.querySelectorAll('.pastapr').forEach((sel) => {
+            sel.addEventListener('change', () => {
+                $.ajax({
+					url: '/pastaprice',
+					data: $('#buypasta').serialize(),
+					type: 'POST',
+					success: function(response){
+						if (response.succ) {
+                            document.getElementById("pastaprice").innerHTML = "$" + response.price;
+                        } else {
+                            document.getElementById("pastaprice").innerHTML = "Invalid";
+                        } 
+                    },
+					error: function(error){
+						console.log(error);
+					}
+                });
+            }) 
+        });
+        document.querySelectorAll('.saladpr').forEach((sel) => {
+            sel.addEventListener('change', () => {
+                $.ajax({
+					url: '/saladprice',
+					data: $('#buysalad').serialize(),
+					type: 'POST',
+					success: function(response){
+						if (response.succ) {
+                            document.getElementById("saladprice").innerHTML = "$" + response.price;
+                        } else {
+                            document.getElementById("saladprice").innerHTML = "Invalid";
+                        } 
+                    },
+					error: function(error){
+						console.log(error);
+					}
+                });
+            }) 
+        });
+        document.querySelectorAll('.dinnerpr').forEach((sel) => {
+            sel.addEventListener('change', () => {
+                $.ajax({
+					url: '/dinnerprice',
+					data: $('#buydinner').serialize(),
+					type: 'POST',
+					success: function(response){
+						if (response.succ) {
+                            document.getElementById("dinnerprice").innerHTML = "$" + response.price;
+                        } else {
+                            document.getElementById("dinnerprice").innerHTML = "Invalid";
+                        } 
+                    },
+					error: function(error){
+						console.log(error);
+					}
+                });
+            }) 
+        });
+    });        
+</script>
+{%endblock %}
+
+{% block body %}
+<h1 class="cente">Menu</h1>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <h2 id="pizza">Pizzas<button type="button" class="btn btn-lg btn-danger right mabo" data-toggle="modal" data-target="#pizzamodal">Buy a pizza! &#127829;</button></h2>
+        <div class="modal fade" id="pizzamodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalCenterTitle">Buy a pizza! &#127829;</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <form id="buypizza">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">    
+                            <label>Type</label>
+                            <select id="pizzatype" class="form-control pizzapr ordselect" name="type">
+                                <option value="0" selected disabled>Choose a type</option>
+                                {% for type in pizzatypes %}
+                                    <option value={{type.id}}>{{type.name}}</option>
+                                {%endfor%}
+                            </select>
+                            <div class="invalid-feedback">
+                                Please choose a type!
+                            </div>
+                        </div>
+                        <div class="form-group">    
+                            <label>Size</label>    
+                            <select id="pizzasize" class="form-control pizzapr ordselect" name="size">
+                                <option value="0" selected disabled>Choose size</option>              
+                                <option value="1">Small</option>
+                                <option value="2">Large</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please choose a size!
+                            </div>
+                        </div>
+                        <div class="form-group">    
+                            <label>1st topping</label>    
+                            <select id="top1" class="form-control pizzapr pizzatop ordselect" name="top1">
+                                <option value="0" selected>No topping</option>
+                                {% for top in toppings %}
+                                    <option value={{top.id}}>{{top.name}}</option>
+                                {%endfor%}
+                            </select>
+                            <select id="2top1" class="form-control hide" name="2top1">
+                                <option value="0" selected>No topping</option>
+                                {% for top in toppings %}
+                                    <option value={{top.id}}>{{top.name}}</option>
+                                {%endfor%}
+                            </select>
+                            <div class="invalid-feedback">
+                                You can't have two or more of the same topping!
+                            </div>
+                        </div>
+                        <div class="form-group">    
+                            <label>2nd topping</label>    
+                            <select id="top2" class="form-control pizzapr pizzatop ordselect" name="top2">
+                                <option value="0" selected>No topping</option>
+                                {% for top in toppings %}
+                                    <option value={{top.id}}>{{top.name}}</option>
+                                {%endfor%}
+                            </select>
+                            <select id="2top2" class="form-control hide ordselect" name="2top2">
+                                <option value="0" selected>No topping</option>
+                                {% for top in toppings %}
+                                    <option value={{top.id}}>{{top.name}}</option>
+                                {%endfor%}
+                            </select>
+                            <div class="invalid-feedback">
+                                You can't have two or more of the same topping!
+                            </div>
+                        </div>
+                        <div class="form-group">    
+                            <label>3rd topping</label>    
+                            <select id="top3" class="form-control pizzapr pizzatop ordselect" name="top3">
+                                <option value="0" selected>No topping</option>
+                                {% for top in toppings %}
+                                    <option value={{top.id}}>{{top.name}}</option>
+                                {%endfor%}
+                            </select>
+                            <select id="2top3" class="form-control hide" name="2top3">
+                                <option value="0" selected>No topping</option>
+                                {% for top in toppings %}
+                                    <option value={{top.id}}>{{top.name}}</option>
+                                {%endfor%}
+                            </select>
+                            <div class="invalid-feedback">
+                                You can't have two or more of the same topping!
+                            </div>
+                        </div>
+                        <div class="form-group">    
+                            <label>4th topping (special)</label>    
+                            <select id="top4" class="form-control pizzapr ordselect" name="top4" readonly>
+                                <option value="0" selected>No topping</option>
+                                {% for top in toppings %}
+                                    <option value={{top.id}}>{{top.name}}</option>
+                                {%endfor%}
+                            </select>
+                            <select id="2top4" class="form-control hide" name="2top4">
+                                <option value="0" selected>No topping</option>
+                                {% for top in toppings %}
+                                    <option value={{top.id}}>{{top.name}}</option>
+                                {%endfor%}
+                            </select>
+                        </div>   
+                        <div class="form-check">
+                            <input class="form-check-input pizzapr" type="checkbox" value="" id="special">
+                            <label class="form-check-label" for="special">
+                            Special (4 random toppings)
+                            </label>
+                        </div>    
+                    </div>
+                    <div class="modal-footer">
+                        <h5>Price: <span id="pizzaprice">Invalid</span></h5>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Add to cart &#128722;</button>
+                    </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        <h4>Regular pizza</h4>
+        <p>Our Regular pizza is a thin-crust or Neapolitan pizza. They come in 2 sizes: small (12" in diameter) and large (16" in diameter). 
+            The small is suitable for 1 to 2 people while the large feeds 2 to 4 people.</p>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Toppings</th>
+                <th scope="col">Small</th>
+                <th scope="col">Large</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Cheese only</td>
+                <td>${{regpizzas.0.0}}</td>
+                <td>${{regpizzas.0.1}}</td>
+            </tr>
+            <tr>
+                <td>1 topping</th>
+                <td>${{regpizzas.1.0}}</td>
+                <td>${{regpizzas.1.1}}</td>
+            </tr>
+            <tr>
+                <td>2 toppings</th>
+                <td>${{regpizzas.2.0}}</td>
+                <td>${{regpizzas.2.1}}</td>
+            </tr>
+            <tr>
+                <td>3 toppings</th>
+                <td>${{regpizzas.3.0}}</td>
+                <td>${{regpizzas.3.1}}</td>
+            </tr>
+            <tr>
+                <td>Special (4 random toppings)</th>
+                <td>${{regpizzas.4.0}}</td>
+                <td>${{regpizzas.4.1}}</td>
+            </tr>
+            </tbody>
+        </table>
+        <h4>Sicilian pizza</h3>
+    <p>Our Sicilian pizza is a deep-dish or thick-crust pizza. We sell them in a 9-slice or a 15-slice size.
+        The 9-slice size is 16" x 16" and will feed anywhere from 3 to 5 people.
+        The 15-slice size is 28" x 16", comes in 2 large pizza boxes and can feed 6 to 9 people.</p>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col">Toppings</th>
+            <th scope="col">Small</th>
+            <th scope="col">Large</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Cheese only</td>
+            <td>${{sicpizzas.0.0}}</td>
+            <td>${{sicpizzas.0.1}}</td>
+        </tr>
+        <tr>
+            <td>1 topping</th>
+            <td>${{sicpizzas.1.0}}</td>
+            <td>${{sicpizzas.1.1}}</td>
+        </tr>
+        <tr>
+            <td>2 toppings</th>
+            <td>${{sicpizzas.2.0}}</td>
+            <td>${{sicpizzas.2.1}}</td>
+        </tr>
+        <tr>
+            <td>3 toppings</th>
+            <td>${{sicpizzas.3.0}}</td>
+            <td>${{sicpizzas.3.1}}</td>
+        </tr>
+        <tr>
+            <td>Special (4 random toppings)</th>
+            <td>${{sicpizzas.4.0}}</td>
+            <td>${{sicpizzas.4.1}}</td>
+        </tr>
+        </tbody>
+    </table>
+    <h4>Toppings</h4> 
+        <div class="cente">
+            {% for i in toppings %}
+                {{i.name}},
+            {% endfor%}
+            and more to come!
+        </div>
+    </div>
+</div> 
+<div class="panel panel-default">
+    <div class="panel-body">
+        <h2 id="sub">Subs<button type="button" class="btn btn-lg btn-danger right mabo" data-toggle="modal" data-target="#submodal">Buy a sub! &#127828;</button></h2>
+        <div class="modal fade" id="submodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalCenterTitle">Buy a sub! &#127828;</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <form id="buysub">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">    
+                            <label>Type</label>
+                            <select id="subtype" class="form-control subpr ordselect" name="type">
+                                <option value="0" selected disabled>Choose a type</option>
+                                {% for type in subs %}
+                                    <option value={{type.id}}>{{type.name}}</option>
+                                {%endfor%}
+                            </select>
+                            <div class="invalid-feedback">
+                                Please choose a type.
+                            </div>
+                        </div>
+                        <div class="form-group">    
+                            <label>Size</label>    
+                            <select id="subsize" class="form-control subpr ordselect" name="size">
+                                <option value="0" selected disabled>Choose size</option>              
+                                <option id="smallsub" value="1">Small</option>
+                                <option value="2">Large</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please choose a size.
+                            </div>
+                        </div>   
+                        <div class="form-check">
+                            <input class="form-check-input subpr" type="checkbox" value="1" id="extcheese" name="extcheese">
+                            <label class="form-check-label" for="extcheese">
+                            Extra Cheese &#129472;
+                            </label>
+                        </div>
+                        {% for ext in extras %}    
+                           {% if ext.name != "Extra Cheese" %}     
+                            <div class="form-check">
+                                <input class="form-check-input subext subpr" type="checkbox" value="{{ext.id}}" id='ext-{{ext.id}}' name='checks[]' disabled>
+                                <label class="form-check-label" for='ext-{{ext.id}}'>
+                                Extra {{ext.name}}
+                                </label>
+                            </div>
+                           {% endif %} 
+                        {% endfor %}         
+                    </div>
+                    <div class="modal-footer">
+                        <h5>Price: <span id="subprice">Invalid</span></h5>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Add to cart &#128722;</button>
+                    </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Small</th>
+                <th scope="col">Large</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for sub in subs %}    
+            <tr>
+                <td>{{sub.name}}</td>
+                <td>{%if sub.small is not None %}${{sub.small}}{%endif%}</td>
+                <td>${{sub.large}}</td>
+            </tr>
+            {% if sub.name == "Steak + Cheese" %}
+                {% for extra in extras %}
+                  {% if extra.name != "Extra Cheese" %}  
+                    <tr>
+                        <td>+{{extra.name}}</td>
+                        <td>+$0.50</td>
+                        <td>+$0.50</td>
+                    </tr>
+                   {% endif %} 
+                {% endfor %}
+            {% endif %}
+            {%endfor%}
+            <tr>
+                <td>Extra Cheese on any sub</td>
+                <td>+$0.50</td>
+                <td>+$0.50</td>
+            </tr>
+            </tbody>
+        </table>       
+    </div>
+</div>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <h2 id="pasta">Pasta<button type="button" class="btn btn-lg btn-danger right mabo" data-toggle="modal" data-target="#pastamodal">Buy pasta! &#127837;</button></h2>
+        <div class="modal fade" id="pastamodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalCenterTitle">Buy pasta! &#127837;</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <form id="buypasta">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">    
+                            <label>Type</label>
+                            <select id="pastatype" class="form-control pastapr ordselect" name="type">
+                                <option value="0" selected disabled>Choose a type</option>
+                                {% for type in pastas %}
+                                    <option value={{type.id}}>{{type.name}}</option>
+                                {%endfor%}
+                            </select>
+                            <div class="invalid-feedback">
+                                Please choose a type.
+                            </div>
+                        </div>       
+                    </div>
+                    <div class="modal-footer">
+                        <h5>Price: <span id="pastaprice">Invalid</span></h5>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Add to cart &#128722;</button>
+                    </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Price</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for pasta in pastas %}    
+            <tr>
+                <td>{{pasta.name}}</td>
+                <td>${{pasta.price}}</td>
+            </tr>
+            {%endfor%}
+            </tbody>
+        </table>       
+    </div>
+</div>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <h2 id="salad">Salads<button type="button" class="btn btn-lg btn-danger right mabo" data-toggle="modal" data-target="#saladmodal">Buy a salad! &#129367;</button></h2>
+        <div class="modal fade" id="saladmodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalCenterTitle">Buy a salad! &#129367;</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <form id="buysalad">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">    
+                            <label>Type</label>
+                            <select id="saladtype" class="form-control saladpr ordselect" name="type">
+                                <option value="0" selected disabled>Choose a type</option>
+                                {% for type in salads %}
+                                    <option value={{type.id}}>{{type.name}}</option>
+                                {%endfor%}
+                            </select>
+                            <div class="invalid-feedback">
+                                Please choose a type.
+                            </div>
+                        </div>       
+                    </div>
+                    <div class="modal-footer">
+                        <h5>Price: <span id="saladprice">Invalid</span></h5>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Add to cart &#128722;</button>
+                    </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Price</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for salad in salads %}    
+            <tr>
+                <td>{{salad.name}}</td>
+                <td>${{salad.price}}</td>
+            </tr>
+            {%endfor%}
+            </tbody>
+        </table>       
+    </div>
+</div>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <h2 id="dinner">Dinner platters<button type="button" class="btn btn-lg btn-danger right mabo" data-toggle="modal" data-target="#dinnermodal">Buy a dinner platter! &#129368;</button></h2>
+        <div class="modal fade" id="dinnermodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalCenterTitle">Buy a dinner platter! &#129368;</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <form id="buydinner">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">    
+                            <label>Type</label>
+                            <select id="dinnertype" class="form-control dinnerpr ordselect" name="type">
+                                <option value="0" selected disabled>Choose a type</option>
+                                {% for type in dinnerplatters %}
+                                    <option value={{type.id}}>{{type.name}}</option>
+                                {%endfor%}
+                            </select>
+                            <div class="invalid-feedback">
+                                Please choose a type.
+                            </div>
+                        </div>
+                        <div class="form-group">    
+                            <label>Size</label>    
+                            <select id="dinnersize" class="form-control dinnerpr ordselect" name="size">
+                                <option value="0" selected disabled>Choose size</option>              
+                                <option value="1">Small</option>
+                                <option value="2">Large</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please choose a size.
+                            </div>
+                        </div>       
+                    </div>
+                    <div class="modal-footer">
+                        <h5>Price: <span id="dinnerprice">Invalid</span></h5>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Add to cart &#128722;</button>
+                    </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Small</th>
+                <th scope="col">Large</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for din in dinnerplatters %}    
+            <tr>
+                <td>{{din.name}}</td>
+                <td>${{din.small}}</td>
+                <td>${{din.large}}</td>
+            </tr>
+            {%endfor%}
+            </tbody>
+        </table>       
+    </div>
+</div>         
+{% endblock %}

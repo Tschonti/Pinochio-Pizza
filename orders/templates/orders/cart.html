@@ -1,0 +1,222 @@
+{% extends "orders/base.html" %}
+{% block title %} Cart {%endblock%}
+
+{% block js %}
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll(".remove").forEach((button) => {
+            button.addEventListener('click', () => {
+                document.getElementById("removebutton").dataset.id = button.dataset.id;
+                document.getElementById("order").innerHTML = button.dataset.emoji + button.dataset.order;
+            })
+        })
+        document.getElementById("removebutton").onclick = () => {
+            var token = '{{csrf_token}}';
+            $.ajax({
+                headers: { "X-CSRFToken": token },
+                url: '/removeorder',
+                data: {"id": document.getElementById("removebutton").dataset.id},
+                type: 'POST',
+                success: function(response){
+                    if (response.succ) {
+                        $('#removemodal').modal('toggle')
+                        if (!response.empty) {   
+                            document.querySelectorAll(".row-" + document.getElementById("removebutton").dataset.id).forEach((en) => {
+                                en.remove();
+                            });
+                            document.getElementById("totalprice").innerHTML = response.price;
+                            let cartno = parseInt(document.getElementById("cartno").innerHTML);
+                            document.getElementById("cartno").innerHTML = cartno -1;
+                        } else {
+                            document.getElementById("notempty").classList.add("hide");
+                            document.getElementById("empty").classList.remove("hide");
+                            document.getElementById("cartno").classList.remove("badge-danger")
+                            document.getElementById("cartno").classList.add("badge-warning")
+                            document.getElementById("cartno").innerHTML = "0";
+                        }    
+                    } else {
+                        alert(response.error);
+                    }
+                },
+                error: function(error){
+                    console.log(error);
+                }
+            });
+        }
+        document.getElementById("modalcancel").onclick = () => {
+            var token = '{{csrf_token}}';
+            $.ajax({
+                headers: { "X-CSRFToken": token },
+                url: '/cancelorder',
+                data: {},
+                type: 'POST',
+                success: function(response){
+                    if (response.succ) {   
+                        $('#cancelmodal').modal('toggle') 
+                        document.getElementById("notempty").classList.add("hide");
+                        document.getElementById("empty").classList.remove("hide");
+                        document.getElementById("cartno").classList.remove("badge-danger")
+                        document.getElementById("cartno").classList.add("badge-warning")
+                        document.getElementById("cartno").innerHTML = "0";
+                    } else {
+                        alert(response.error);
+                    }
+                },
+                error: function(error){
+                    console.log(error);
+                }
+            });
+        }
+        document.getElementById("modalfinalize").onclick = () => {
+            var token = '{{csrf_token}}';
+            $.ajax({
+                headers: { "X-CSRFToken": token },
+                url: '/finalizeorder',
+                data: {},
+                type: 'POST',
+                success: function(response){
+                    if (response.succ) { 
+                        $('#finalizemodal').modal('toggle')
+                        //alert("Your order is on it's way!")   
+                        //document.getElementById("notempty").classList.add("hide");
+                        //document.getElementById("empty").classList.remove("hide");
+                        //document.getElementById("cartno").classList.remove("badge-danger")
+                        //document.getElementById("cartno").classList.add("badge-warning")
+                        //document.getElementById("cartno").innerHTML = "0";
+                        window.location.assign("{% url 'myorders' %}");
+                    } else {
+                        alert(response.error);
+                    }
+                },
+                error: function(error){
+                    console.log(error);
+                }
+            });
+        }
+    });    
+</script>
+{% endblock %}
+
+{% block body %}
+<h1 class="cente">Cart</h1>
+<div class="panel panel-default">
+    <div class="panel-body">   
+        <div id="removemodal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Are you sure?</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p>Are you sure you want to remove this order?</p>
+                  <p id="order"></p>
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button id="removebutton" type="button" data-id="" data-csakid="" class="btn btn-danger">Remove</button>                 
+                </div>
+              </div>
+            </div>
+          </div>
+            <div id="notempty" class="{% if empty %} hide {% endif %}">
+            <table class="table table-striped cente">
+                <thead>
+                <tr>
+                    <th scope="col">Order</th>
+                    <th class="left" scope="col">Type</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Remove</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for i in pizzaorders %}
+                    <tr>                        
+                        <td class=" row-pi-{{i.id}}">&#127829;</td>
+                        <td class="left pirow-pi-{{i.id}}">{{i}}</td>
+                        <td class=" row-pi-{{i.id}}">${{i.price}}</td>
+                        <td class=" row-pi-{{i.id}}"><a href="/" data-emoji="&#127829; " data-order="{{i}}" data-id="pi-{{i.id}}" data-toggle="modal" data-target="#removemodal" class="badge badge-pill badge-danger remove">X</a></td>
+                    </tr>        
+                {%endfor%}
+                {% for i in suborders %}
+                    <tr>
+                        <td class=" row-su-{{i.id}}">&#127828;</td>
+                        <td class="left row-su-{{i.id}}">{{i}}</td>
+                        <td class=" row-su-{{i.id}}">${{i.price}}</td>
+                        <td class=" row-su-{{i.id}}"><a href="/" data-emoji="&#127828; " data-order="{{i}}" data-id="su-{{i.id}}" data-toggle="modal" data-target="#removemodal" class="badge badge-pill badge-danger remove">X</a></td>
+                    </tr>        
+                {%endfor%}
+                {% for i in pastaorders %}
+                    <tr>
+                        <td class=" row-pa-{{i.id}}">&#127837;</td>
+                        <td class="left row-pa-{{i.id}}">{{i}}</td>
+                        <td class=" row-pa-{{i.id}}">${{i.type.price}}</td>
+                        <td class=" row-pa-{{i.id}}"><a href="/" data-emoji="&#127837; " data-order="{{i}}" data-id="pa-{{i.id}}" data-toggle="modal" data-target="#removemodal" class="badge badge-pill badge-danger remove">X</a></td>
+                    </tr>        
+                {%endfor%}
+                {% for i in saladorders %}
+                    <tr>
+                        <td class=" row-sa-{{i.id}}">&#129367;</td>
+                        <td class="left row-sa-{{i.id}}">{{i}}</td>
+                        <td class=" row-sa-{{i.id}}">${{i.type.price}}</td>
+                        <td class=" row-sa-{{i.id}}"><a href="/" data-emoji="&#129367; " data-order="{{i}}" data-id="sa-{{i.id}}" data-toggle="modal" data-target="#removemodal" class="badge badge-pill badge-danger remove">X</a></td>
+                    </tr>        
+                {%endfor%}
+                {% for i in dinnerorders %}
+                    <tr>
+                        <td class=" row-di-{{i.id}}">&#129368;</td>
+                        <td class="left row-di-{{i.id}}">{{i}}</td>
+                        <td class=" row-di-{{i.id}}">${{i.price}}</td>
+                        <td class=" row-di-{{i.id}}"><a href="/" data-emoji="&#129368; " data-order="{{i}}" data-id="di-{{i.id}}" data-toggle="modal" data-target="#removemodal" class="badge badge-pill badge-danger remove">X</a></td>
+                    </tr>        
+                {%endfor%}
+                </tbody>
+            </table>
+            <a href="{% url 'index' %}">Hungry for more? Back to the menu</a>
+            <h3 class="tright">Total price: $<span id="totalprice">{{sum}}</span> <button id="cancel" type="button" data-toggle="modal" data-target="#cancelmodal" class="btn btn-secondary">Cancel order</button>
+                <button type="button" id="finalize" data-toggle="modal" data-target="#finalizemodal" class="btn btn-danger">Finalize order</button></h3>
+            <div id="cancelmodal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Are you sure?</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to cancel this order?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Dismiss</button>
+                        <button id="modalcancel" type="button" class="btn btn-danger" >Cancel order</button>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <div id="finalizemodal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Are you sure?</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to finalize this order?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Dismiss</button>
+                        <button id="modalfinalize" type="button" class="btn btn-danger" >Finalize order</button>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+         <h2 id="empty" class="{% if not empty %}hide{%endif%}">Your cart is empty. Fill it wit pizzas and more in <a href="{%url 'index' %}">our menu!</a></h2>   
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="{% static 'orders/styles.css' %}" rel="stylesheet">
+    <link rel="shortcut icon" type="image/png" href="{% static 'orders/favicon.ico' %}"/>
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    {% block js %}{%endblock%}
+</head>
+<body> 
+    <div class="cont"> 
+        <nav class="navbar sticky-top navbar-expand-md navbar-light bg-light border">
+            <a class="navbar-brand" href="/">Pinochio's Pizza & Sub &#127829; </a>
+            <button aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-target="#navbar" data-toggle="collapse" type="button">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar">
+                    <ul class="navbar-nav mr-auto mt-2">
+                        <li class="nav-item"><a class="nav-link" href="/">Menu</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/cart">Cart {% if cart %}{% if cart > 0 %} <span id="cartno" class="badge badge-pill badge-danger">{{cart}}</span>{%else%}<span id="cartno" class="badge badge-pill badge-warning">0</span>{%endif%}{%else%}<span id="cartno" class="badge badge-pill badge-warning">0</span>{%endif%}</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/myorders">My orders {% if myorders %}{% if myorders > 0 %} <span id="myorders" class="badge badge-pill badge-danger">{{myorders}}</span>{%else%}<span id="myorders" class="badge badge-pill badge-warning">0</span>{%endif%}{%else%}<span id="myorders" class="badge badge-pill badge-warning">0</span>{%endif%}</a></li>
+                        {% if superuser %}<li class="nav-item"><a class="nav-link" href="/allorders">All orders </a></li>{%endif%}
+                    </ul>
+                    {% block nav %}{%endblock%}
+                    <ul class="navbar-nav ml-auto mt-2">    
+                        {% if request.user.is_authenticated %}
+                        <li class="nav-item"><span class="navbar-text">Logged in as {{user.username}}</span></li>
+                        <li class="nav-item"><a class="nav-link" href="/logout">{{ _("Log Out") }}</a></li>
+                        {% else %}
+                        <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/login">Log In </a></li>
+                        {% endif %} 
+                    </ul>    
+            </div>
+        </nav>
+    
+    <div class="body">
+        <div class="container">
+        {% block body %}
+        {% endblock%}
+        </div>
+    </div>
+    <div class="footer cente">
+        Created by <a target="_blank" href="https://www.linkedin.com/in/samuel-fekete/">Sámuel Fekete</a>, 2020&nbsp;<!--|&nbsp;<a href="/privacy">{{ _("Privacy policy") }}</a> &nbsp;|&nbsp; <a target="_blank" href="https://github.com/Tschonti/orienteering.rate">GitHub repository</a>-->
+    </div>
+  </div>
+</body>
+</html>

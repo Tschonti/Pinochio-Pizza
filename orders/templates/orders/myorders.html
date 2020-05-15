@@ -1,0 +1,118 @@
+{% extends "orders/base.html" %}
+{% block title %} My orders {%endblock%}
+
+{% block body %}
+<h1 class="cente">My orders</h1>
+<div class="panel panel-default">
+    <div class="panel-body">   
+            <h3>Ongoing orders</h3>
+            {% for o in ongoing %}     
+                <table class="table table-striped cente">
+                    <thead>
+                    <tr>
+                        <th scope="col">Order</th>
+                        <th class="left" scope="col">Type</th>
+                        <th scope="col">Price</th>
+                    </tr>
+                    </thead>
+                    <tbody>                  
+                    {% for i in o.1 %}
+                        <tr>                        
+                            <td>&#127829;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.price}}</td>                    
+                        </tr>        
+                    {%endfor%}
+                    {% for i in o.2 %}
+                        <tr>
+                            <td>&#127828;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.price}}</td>                        
+                        </tr>        
+                    {%endfor%}
+                    {% for i in o.3 %}
+                        <tr>
+                            <td>&#127837;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.type.price}}</td>                       
+                        </tr>        
+                    {%endfor%}
+                    {% for i in o.4 %}
+                        <tr>
+                            <td>&#129367;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.type.price}}</td>                        
+                        </tr>        
+                    {%endfor%}
+                    {% for i in o.5 %}
+                        <tr>
+                            <td>&#129368;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.price}}</td>                    
+                        </tr>        
+                    {%endfor%}
+                </tbody>
+            </table>
+            <h3 class="tright">Total price: ${{o.0}}</h3>
+        {% empty %}
+            <h5>You have no ongoing orders.</h5>    
+        {% endfor %}    
+    </div>
+</div>
+<div class="panel panel-default">
+    <div class="panel-body">   
+            <h3>Completed orders</h3>
+            {% for o in completed %}     
+                <table class="table table-striped cente">
+                    <thead>
+                    <tr>
+                        <th scope="col">Order</th>
+                        <th class="left" scope="col">Type</th>
+                        <th scope="col">Price</th>
+                    </tr>
+                    </thead>
+                    <tbody>                  
+                    {% for i in o.1 %}
+                        <tr>                        
+                            <td>&#127829;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.price}}</td>                    
+                        </tr>        
+                    {%endfor%}
+                    {% for i in o.2 %}
+                        <tr>
+                            <td>&#127828;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.price}}</td>                        
+                        </tr>        
+                    {%endfor%}
+                    {% for i in o.3 %}
+                        <tr>
+                            <td>&#127837;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.type.price}}</td>                       
+                        </tr>        
+                    {%endfor%}
+                    {% for i in o.4 %}
+                        <tr>
+                            <td>&#129367;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.type.price}}</td>                        
+                        </tr>        
+                    {%endfor%}
+                    {% for i in o.5 %}
+                        <tr>
+                            <td>&#129368;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.price}}</td>                    
+                        </tr>        
+                    {%endfor%}
+                </tbody>
+            </table>
+            <h3 class="tright">Total price: ${{o.0}}</h3>
+        {% empty %}
+        <h5>You have no completed orders.</h5>
+        {% endfor %}    
+    </div>
+</div>
+{% endblock %}

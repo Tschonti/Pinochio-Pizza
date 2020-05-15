@@ -1,0 +1,136 @@
+{% extends "orders/base.html" %}
+{% block title %} All orders {%endblock%}
+
+{% block js %}
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.comp').forEach((button) => {
+            button.addEventListener('click', () => {
+                document.getElementById('modalcomplete').dataset.id = button.dataset.id;
+            })
+        })
+        document.getElementById('modalcomplete').onclick = () => {
+            var token = '{{csrf_token}}';
+            $.ajax({
+                headers: { "X-CSRFToken": token },
+                url: '/completeorder',
+                data: {"id": document.getElementById("modalcomplete").dataset.id},
+                type: 'POST',
+                success: function(response){
+                    if (response.succ) {
+                        $('#completemodal').modal('toggle')
+                        if (!response.empty) {   
+                            document.querySelector("#table-" + document.getElementById("modalcomplete").dataset.id).remove();
+                            if (response.myorder) {    
+                                let myorders = parseInt(document.getElementById("myorders").innerHTML);
+                                document.getElementById("myorders").innerHTML = myorders -1;
+                            }
+                        } else {
+                            document.querySelectorAll(".notempty").forEach((table) => {
+                                table.classList.add("hide");
+                            });  
+                            document.getElementById("empty").classList.remove("hide");  
+                            if (response.myorder) {    
+                                let myorders = parseInt(document.getElementById("myorders").innerHTML);
+                                document.getElementById("myorders").innerHTML = myorders -1;
+                                if (myorders == 1){
+                                    document.getElementById("myorders").classList.remove("badge-danger");
+                                    document.getElementById("myorders").classList.add("badge-warning");
+                                }
+                            }    
+
+                        }    
+                    } else {
+                        alert(response.error);
+                    }
+                },
+                error: function(error){
+                    console.log(error);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+
+{% block body %}
+<h1 class="cente">All orders</h1>
+<div class="panel panel-default">
+    <div class="panel-body">   
+            {% for o in orders %}     
+            <div class="notempty" id="table-{{o.7}}">  
+                <h5>Order by {{o.6}}</h5>
+                <table class="table table-striped cente">
+                    <thead>
+                    <tr>
+                        <th scope="col">Order</th>
+                        <th class="left" scope="col">Type</th>
+                        <th scope="col">Price</th>
+                    </tr>
+                    </thead>
+                    <tbody>                  
+                    {% for i in o.1 %}
+                        <tr>                        
+                            <td>&#127829;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.price}}</td>                    
+                        </tr>        
+                    {%endfor%}
+                    {% for i in o.2 %}
+                        <tr>
+                            <td>&#127828;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.price}}</td>                        
+                        </tr>        
+                    {%endfor%}
+                    {% for i in o.3 %}
+                        <tr>
+                            <td>&#127837;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.type.price}}</td>                       
+                        </tr>        
+                    {%endfor%}
+                    {% for i in o.4 %}
+                        <tr>
+                            <td>&#129367;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.type.price}}</td>                        
+                        </tr>        
+                    {%endfor%}
+                    {% for i in o.5 %}
+                        <tr>
+                            <td>&#129368;</td>
+                            <td class="left">{{i}}</td>
+                            <td>${{i.price}}</td>                    
+                        </tr>        
+                    {%endfor%}
+                </tbody>
+            </table>
+            <h3 class="tright">Total price: ${{o.0}} <button type="button" id="complete-{{o.7}}" data-toggle="modal" data-target="#completemodal" data-id="{{o.7}}" class="btn btn-danger comp">Mark as completed</button></h3>
+        </div>
+        {% empty %}
+            <h5>There are no ongoing orders.</h5>    
+        {% endfor %}
+        <h5 id="empty" class="hide">There are no ongoing orders.</h5> 
+        <div id="completemodal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Are you sure?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to mark this order as completed?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button id="modalcomplete" data-id="" type="button" class="btn btn-danger">Complete order</button>
+                </div>
+                </div>
+            </div>
+        </div>    
+    </div>
+</div>
+{% endblock %}
